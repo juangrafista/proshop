@@ -21,8 +21,7 @@ const ProductScreen = ({ match }) => {
       setProduct(data)
     }
     fecthProduct()
-    // eslint-disable-next-line
-  }, [])
+  }, [match])
 
   return (
     <>
