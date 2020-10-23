@@ -18,11 +18,10 @@ const ProductScreen = ({ match }) => {
   useEffect(() => {
     const fecthProduct = async () => {
       const { data } = await axios.get(`/api/products/${match.params.id}`)
-
       setProduct(data)
     }
-
     fecthProduct()
+    // eslint-disable-next-line
   }, [])
 
   return (
