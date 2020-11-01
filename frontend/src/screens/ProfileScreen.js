@@ -13,6 +13,7 @@ const ProfileScreen = ({ location, history }) => {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [message, setMessage] = useState(null)
+  const [updated, setUpdated] = useState(false)
 
   const dispatch = useDispatch()
 
@@ -23,7 +24,8 @@ const ProfileScreen = ({ location, history }) => {
   const { userInfo } = userLogin
 
   const userUpdateProfile = useSelector((state) => state.userUpdateProfile)
-  const { success, updated } = userUpdateProfile
+  const { success } = userUpdateProfile
+  console.log('success is', success)
 
   useEffect(() => {
     if (!userInfo) {
@@ -37,14 +39,23 @@ const ProfileScreen = ({ location, history }) => {
         setEmail(user.email)
       }
     }
-  }, [dispatch, history, userInfo, user, success, updated])
+  }, [dispatch, history, userInfo, user, success])
 
   const submitHandler = (e) => {
     e.preventDefault()
     if (password !== confirmPassword) {
       setMessage('Passwords do not match')
     } else {
-      dispatch(updateUserProfile({ id: user._id, name, email, password }))
+      setUpdated(true)
+      dispatch(
+        updateUserProfile({
+          id: user._id,
+          name,
+          email,
+          password,
+          // success: true,
+        })
+      )
     }
   }
 
