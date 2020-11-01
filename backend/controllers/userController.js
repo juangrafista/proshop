@@ -25,7 +25,7 @@ const authUser = asyncHandler(async (req, res) => {
 })
 
 // @desc    Register a new user
-// @route   POST /api/users/
+// @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body
@@ -33,8 +33,8 @@ const registerUser = asyncHandler(async (req, res) => {
   const userExists = await User.findOne({ email })
 
   if (userExists) {
-    res.status(404)
-    throw new Error('User already exist')
+    res.status(400)
+    throw new Error('User already exists')
   }
 
   const user = await User.create({
@@ -53,12 +53,12 @@ const registerUser = asyncHandler(async (req, res) => {
     })
   } else {
     res.status(400)
-    throw new Error('Invalid User Data')
+    throw new Error('Invalid user data')
   }
 })
 
-// @desc    Get User Profile
-// @route   GET /api/user/profile
+// @desc    Get user profile
+// @route   GET /api/users/profile
 // @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id)
@@ -76,8 +76,8 @@ const getUserProfile = asyncHandler(async (req, res) => {
   }
 })
 
-// @desc    Update the User Profile
-// @route   PUT /api/user/profile
+// @desc    Update user profile
+// @route   PUT /api/users/profile
 // @access  Private
 const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id)
