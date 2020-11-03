@@ -32,6 +32,7 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password)
 }
 
+//pre function to encrypt password before it's saved
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next()
