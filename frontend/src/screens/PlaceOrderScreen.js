@@ -26,6 +26,8 @@ const PlaceOrderScreen = () => {
     console.log('place order')
   }
 
+  const dispatch = useDispatch()
+
   return (
     <div>
       <CheckoutSteps step1 step2 step3 step4 />
@@ -53,8 +55,8 @@ const PlaceOrderScreen = () => {
                 <Message>Your Cart Is empty</Message>
               ) : (
                 <ListGroup variant='flush'>
-                  {cart.cartItems.map((item, index) => (
-                    <ListGroup.Item key={index}>
+                  {cart.cartItems.map((item) => (
+                    <ListGroup.Item key={item.productId}>
                       <Row>
                         <Col md={2}>
                           <Image
