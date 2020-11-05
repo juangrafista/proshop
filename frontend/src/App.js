@@ -12,7 +12,6 @@ import ProfileScreen from './screens/ProfileScreen'
 import ShippingScreen from './screens/ShippingScreen'
 import PaymentScreen from './screens/PaymentScreen'
 import PlaceOrderScreen from './screens/PlaceOrderScreen'
-import ErrorBoundary from './components/ErrorBoundary'
 
 const App = () => {
   return (
@@ -27,9 +26,7 @@ const App = () => {
           <Route path='/register' component={RegisterScreen} />
           <Route path='/profile' component={ProfileScreen} />
           <Route path='/product/:id' component={ProductScreen} />
-          <ErrorBoundary>
-            <Route path='/cart/:id?' component={CartScreen} />
-          </ErrorBoundary>
+          <Route path='/cart/:id?' component={CartScreen} />
           <Route path='/' component={HomeScreen} exact />
         </Container>
       </main>
