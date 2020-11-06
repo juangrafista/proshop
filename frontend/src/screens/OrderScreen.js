@@ -1,17 +1,26 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import axios from 'axios'
+import { PayPalButton } from 'react-paypal-button-v2'
 import { Row, Col, ListGroup, Image, Card } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
-import { getOrderDetails } from '../actions/orderActions'
+import { getOrderDetails, payOrder } from '../actions/orderActions'
+import { ORDER_PAY_RESET } from '../constants/orderConstants'
 
 const OrderScreen = ({ match }) => {
   const orderId = match.params.id
+
+  const [sdkReady, setSdkReady] = useState(false)
+
   const dispatch = useDispatch()
 
   const orderDetails = useSelector((state) => state.orderDetails)
   const { order, loading, error } = orderDetails
+
+  const orderPay = useSelector((state) => state.orderPay)
+  const { loading: loadingPay, success: successPay } = orderPay
 
   const addDecimals = (num) => {
     return (Math.round(num * 100) / 100).toFixed(2)
@@ -26,10 +35,34 @@ const OrderScreen = ({ match }) => {
   }
 
   useEffect(() => {
-    if (!order || order._id !== orderId) {
-      dispatch(getOrderDetails(orderId))
+    const addPayPalScript = async () => {
+      const { data: clientId } = await axios.get('/api/config/paypal')
+      const script = document.createElement('script')
+      script.type = 'text/javascript'
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}`
+      script.async = true
+      script.onload = () => {
+        setSdkReady(true)
+      }
+      document.body.appendChild(script)
     }
-  }, [dispatch, order, orderId])
+
+    if (!order || successPay || order._id !== orderId) {
+      dispatch({ type: ORDER_PAY_RESET })
+      dispatch(getOrderDetails(orderId))
+    } else if (!order.isPaid) {
+      if (!window.paypal) {
+        addPayPalScript()
+      } else {
+        setSdkReady(true)
+      }
+    }
+  }, [dispatch, orderId, successPay, order])
+
+  const successPaymentHandler = (paymentResult) => {
+    console.log(paymentResult)
+    dispatch(payOrder(orderId, paymentResult))
+  }
 
   return loading ? (
     <Loader />
@@ -74,18 +107,18 @@ const OrderScreen = ({ match }) => {
               {order.isPaid ? (
                 <Message variant='success'>Paid on {order.paidAt}</Message>
               ) : (
-                <Message variant='danger'>Not paid</Message>
+                <Message variant='danger'>Not Paid</Message>
               )}
             </ListGroup.Item>
 
             <ListGroup.Item>
               <h2>Order Items</h2>
               {order.orderItems.length === 0 ? (
-                <Message>Order Is Empty</Message>
+                <Message>Order is empty</Message>
               ) : (
                 <ListGroup variant='flush'>
-                  {order.orderItems.map((item) => (
-                    <ListGroup.Item key={item.product}>
+                  {order.orderItems.map((item, index) => (
+                    <ListGroup.Item key={index}>
                       <Row>
                         <Col md={1}>
                           <Image
@@ -100,9 +133,8 @@ const OrderScreen = ({ match }) => {
                             {item.name}
                           </Link>
                         </Col>
-                        <Col md={4} className='justify-content-end text-right'>
-                          {item.qty} x ${item.price} = $
-                          {(item.qty * item.price).toFixed(2)}
+                        <Col md={4}>
+                          {item.qty} x ${item.price} = ${item.qty * item.price}
                         </Col>
                       </Row>
                     </ListGroup.Item>
@@ -122,7 +154,6 @@ const OrderScreen = ({ match }) => {
                 <Row>
                   <Col>Items</Col>
                   <Col className='text-right'>${order.itemsPrice}</Col>
-                  <Col md={2}></Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
@@ -131,7 +162,6 @@ const OrderScreen = ({ match }) => {
                   <Col className='text-right'>
                     ${addDecimals(order.shippingPrice)}
                   </Col>
-                  <Col md={2}></Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
@@ -140,16 +170,27 @@ const OrderScreen = ({ match }) => {
                   <Col className='text-right'>
                     ${Number(order.taxPrice).toFixed(2)}
                   </Col>
-                  <Col md={2}></Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
                 <Row>
                   <Col>Total</Col>
                   <Col className='text-right'>${order.totalPrice}</Col>
-                  <Col md={2}></Col>
                 </Row>
               </ListGroup.Item>
+              {!order.isPaid && (
+                <ListGroup.Item>
+                  {loadingPay && <Loader />}
+                  {!sdkReady ? (
+                    <Loader />
+                  ) : (
+                    <PayPalButton
+                      amount={order.totalPrice}
+                      onSuccess={successPaymentHandler}
+                    />
+                  )}
+                </ListGroup.Item>
+              )}
             </ListGroup>
           </Card>
         </Col>
